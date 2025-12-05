@@ -18,6 +18,7 @@ const QUERY: &str = r#"
                             parent { owner { login } },
                             owner { login },
                             created_at: createdAt,
+                            url
                         }
                     }
                 }
@@ -65,6 +66,7 @@ struct RepositoryInfo {
     parent: Option<RepositoryParent>,
     owner: RepositoryOwner,
     created_at: DateTime,
+    url: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -84,6 +86,7 @@ pub struct Repository {
     pub owner: String,
     pub original_owner: Option<String>,
     pub created_at: DateTime,
+    pub url: String,
 }
 
 pub async fn query(
@@ -119,6 +122,7 @@ pub async fn query(
                 owner: repo.owner.login,
                 original_owner: repo.parent.map(|p| p.owner.login),
                 created_at: repo.created_at,
+                url: repo.url,
             };
             items.push(item);
         }

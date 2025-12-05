@@ -21,6 +21,7 @@ const QUERY: &str = r#"
                             state,
                             created_at: createdAt,
                             body_text: bodyText,
+                            url,
                         }
                     }
                 }
@@ -68,6 +69,7 @@ struct PullRequestInfo {
     state: ItemState,
     created_at: DateTime,
     body_text: String,
+    url: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -89,6 +91,7 @@ pub struct PullRequest {
     pub state: ItemState,
     pub created_at: DateTime,
     pub body_text: String,
+    pub url: String,
 }
 
 pub async fn query(
@@ -124,6 +127,7 @@ pub async fn query(
                 state: pr.pull_request.state,
                 created_at: pr.pull_request.created_at,
                 body_text: pr.pull_request.body_text,
+                url: pr.pull_request.url,
             };
             items.push(item);
         }
