@@ -14,6 +14,9 @@ struct Cli {
 
     /// A GitHub token to enable access to the APIs. This can also
     /// be provided via the env var GITHUB_TOKEN.
+    /// 
+    /// The token should have read access to discussions, issues, 
+    /// metadata, and pull requests.
     #[arg(long)]
     gh_token: Option<String>,
 
