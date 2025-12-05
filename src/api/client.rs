@@ -1,7 +1,7 @@
-use reqwest::{ Client };
-use serde::{de::DeserializeOwned, Serialize, Deserialize};
-use serde_json::{ json, value::RawValue };
 use anyhow::Context;
+use reqwest::Client;
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde_json::{json, value::RawValue};
 
 const ROOT_URL: &str = "https://api.github.com/graphql";
 
@@ -14,11 +14,19 @@ pub struct Api {
 }
 
 impl Api {
-    pub async fn new(token: String) -> Result<Api, anyhow::Error> {
+    pub async fn new(token: String, maybe_user: Option<String>) -> Result<Api, anyhow::Error> {
         let client = Client::new();
-        let user = Api::fetch_username(&client, &token).await?;
+        let user = if let Some(user) = maybe_user {
+            user
+        } else {
+            Api::fetch_username(&client, &token).await?
+        };
 
-        Ok(Api { token, client, user })
+        Ok(Api {
+            token,
+            client,
+            user,
+        })
     }
 
     /// The username can not be retrieved via the GraphQL API, so we make a REST call instead.
@@ -35,9 +43,11 @@ impl Api {
         if res.status().is_success() {
             #[derive(Deserialize)]
             struct UserResponse {
-                login: String
+                login: String,
             }
-            let res: UserResponse = res.json().await
+            let res: UserResponse = res
+                .json()
+                .await
                 .with_context(|| "Failed to decode user response")?;
             Ok(res.login)
         } else {
@@ -51,7 +61,11 @@ impl Api {
     }
 
     /// Send a GraphQL query with variables.
-    pub async fn query<Res: DeserializeOwned>(&self, query: &str, variables: Variables) -> Result<Res, anyhow::Error> {
+    pub async fn query<Res: DeserializeOwned>(
+        &self,
+        query: &str,
+        variables: Variables,
+    ) -> Result<Res, anyhow::Error> {
         let err_context = |msg: &str| {
             // pull out the name given to the query if possible:
             let first_line = query
@@ -65,7 +79,8 @@ impl Api {
             format!("{first_line}: {msg}")
         };
 
-        let res = self.client
+        let res = self
+            .client
             .post(ROOT_URL)
             .bearer_auth(&self.token)
             .header("User-Agent", "jsdw-github-summarizer")
@@ -80,14 +95,14 @@ impl Api {
         let status = res.status();
         if status.is_success() {
             // Broken down the steps to allow better debugging in case of issue:
-            let text = res.text().await
-                .with_context(|| {
-                    err_context("Failed to obtain string response")
-                })?;
+            let text = res
+                .text()
+                .await
+                .with_context(|| err_context("Failed to obtain string response"))?;
 
             #[derive(Deserialize)]
             struct QueryData<Res> {
-                data: Res   
+                data: Res,
             }
 
             // Trying to decode as QueryData first, rather than trying to decode as an enum
@@ -95,7 +110,7 @@ impl Api {
             let body: QueryData<Res> = serde_json::from_str(&text).map_err(|e| {
                 #[derive(Deserialize)]
                 struct QueryErrors {
-                    errors: Vec<QueryError>
+                    errors: Vec<QueryError>,
                 }
                 if let Ok(errors) = serde_json::from_str::<QueryErrors>(&text) {
                     ApiError::QueryErrors(errors.errors)
@@ -116,7 +131,7 @@ impl Api {
 
 /// This represents variables you can pass to a GraphQL query.
 pub struct Variables {
-    json: Vec<u8>
+    json: Vec<u8>,
 }
 
 impl Variables {
@@ -164,7 +179,7 @@ pub enum ApiError {
 #[allow(dead_code)]
 pub struct QueryError {
     path: Option<Vec<String>>,
-    message: String
+    message: String,
 }
 
 #[macro_export]
