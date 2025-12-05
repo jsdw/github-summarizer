@@ -8,12 +8,17 @@ use utils::DateTime;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
+    /// An ISO DateTime, for example '2025-06-01T00:00:00Z'.
     #[arg(long)]
     from: DateTime,
 
+    /// A GitHub token to enable access to the APIs. This can also
+    /// be provided via the env var GITHUB_TOKEN.
     #[arg(long)]
     gh_token: Option<String>,
 
+    /// An optional user name. If not provided, the username associated
+    /// with the provided GitHub token will be used.
     #[arg(long)]
     user: Option<String>,
 }

@@ -1,6 +1,6 @@
 use crate::api::client::Api;
-use crate::variables;
 use crate::utils::{DateTime, ItemState};
+use crate::variables;
 
 const QUERY: &str = r#"
     query IssueContributions($user:String!, $from:DateTime!, $to:DateTime!, $cursor:String) {
@@ -91,19 +91,28 @@ pub struct Issue {
     pub body_text: String,
 }
 
-pub async fn query(api: &Api, created_after: DateTime, created_before: DateTime) -> Result<Vec<Issue>, anyhow::Error> {
+pub async fn query(
+    api: &Api,
+    created_after: DateTime,
+    created_before: DateTime,
+) -> Result<Vec<Issue>, anyhow::Error> {
     let user = api.user();
 
     let mut items = vec![];
     let mut cursor = None;
 
     loop {
-        let res: QueryResult = api.query(QUERY, variables!(
-            "user": &user,
-            "from": created_after,
-            "to": created_before,
-            "cursor": cursor
-        )).await?;
+        let res: QueryResult = api
+            .query(
+                QUERY,
+                variables!(
+                    "user": &user,
+                    "from": created_after,
+                    "to": created_before,
+                    "cursor": cursor
+                ),
+            )
+            .await?;
 
         let pr_contributions = res.user.contributions_collection.issue_contributions;
 
@@ -121,7 +130,7 @@ pub async fn query(api: &Api, created_after: DateTime, created_before: DateTime)
 
         cursor = pr_contributions.page_info.end_cursor;
         if !pr_contributions.page_info.has_next_page || cursor.is_none() {
-            break
+            break;
         }
     }
 

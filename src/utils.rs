@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use std::fmt;
+use std::str::FromStr;
 use time::format_description::well_known::Iso8601;
 
 /// A DateTime that can be parsed from/to ISO 8601 repr.
@@ -17,12 +17,15 @@ impl serde::ser::Serialize for DateTime {
     where
         S: serde::Serializer,
     {
-        let s = self.0.format(&Iso8601::DEFAULT).map_err(serde::ser::Error::custom)?;
+        let s = self
+            .0
+            .format(&Iso8601::DEFAULT)
+            .map_err(serde::ser::Error::custom)?;
         serializer.serialize_str(&s)
     }
 }
 
-impl <'de> serde::Deserialize<'de> for DateTime {
+impl<'de> serde::Deserialize<'de> for DateTime {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -42,7 +45,9 @@ impl FromStr for DateTime {
 
 impl fmt::Display for DateTime {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let s = self.0.format(&Iso8601::DEFAULT)
+        let s = self
+            .0
+            .format(&Iso8601::DEFAULT)
             .expect("Failed to format time");
         write!(f, "{s}")
     }
@@ -53,7 +58,7 @@ impl fmt::Display for DateTime {
 pub enum ItemState {
     Open,
     Closed,
-    Merged
+    Merged,
 }
 
 impl FromStr for ItemState {
@@ -63,7 +68,9 @@ impl FromStr for ItemState {
             "OPEN" => Ok(ItemState::Open),
             "CLOSED" => Ok(ItemState::Closed),
             "MERGED" => Ok(ItemState::Merged),
-            _ => Err(anyhow::anyhow!("Unknown ItemState variant: {s:?}, expecting OPEN, CLOSED or MERGED")),
+            _ => Err(anyhow::anyhow!(
+                "Unknown ItemState variant: {s:?}, expecting OPEN, CLOSED or MERGED"
+            )),
         }
     }
 }

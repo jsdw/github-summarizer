@@ -1,6 +1,6 @@
 use crate::api::client::Api;
-use crate::variables;
 use crate::utils::DateTime;
+use crate::variables;
 
 const QUERY: &str = r#"
     query RepositoriesCreated($user:String!, $from:DateTime!, $to:DateTime!, $cursor:String) {
@@ -86,19 +86,28 @@ pub struct Repository {
     pub created_at: DateTime,
 }
 
-pub async fn query(api: &Api, created_after: DateTime, created_before: DateTime) -> Result<Vec<Repository>, anyhow::Error> {
+pub async fn query(
+    api: &Api,
+    created_after: DateTime,
+    created_before: DateTime,
+) -> Result<Vec<Repository>, anyhow::Error> {
     let user = api.user();
 
     let mut items = vec![];
     let mut cursor = None;
 
     loop {
-        let res: QueryResult = api.query(QUERY, variables!(
-            "user": &user,
-            "from": created_after,
-            "to": created_before,
-            "cursor": cursor
-        )).await?;
+        let res: QueryResult = api
+            .query(
+                QUERY,
+                variables!(
+                    "user": &user,
+                    "from": created_after,
+                    "to": created_before,
+                    "cursor": cursor
+                ),
+            )
+            .await?;
 
         let repo_contributions = res.user.contributions_collection.repository_contributions;
 
@@ -116,7 +125,7 @@ pub async fn query(api: &Api, created_after: DateTime, created_before: DateTime)
 
         cursor = repo_contributions.page_info.end_cursor;
         if !repo_contributions.page_info.has_next_page || cursor.is_none() {
-            break
+            break;
         }
     }
 
